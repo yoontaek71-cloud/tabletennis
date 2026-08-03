@@ -8,9 +8,6 @@
         :root {
             --primary: #007bff;
             --bg: #f8f9fa;
-            --high-color: #d9534f;
-            --mid-color: #f0ad4e;
-            --low-color: #5cb85c;
             --match-bg: #ffffff;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -31,11 +28,6 @@
         .team-card { background: white; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); border-left: 5px solid var(--primary); }
         .team-header { font-weight: bold; font-size: 0.95em; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
         .team-members { font-size: 1em; word-break: break-all; }
-        
-        .badge { padding: 2px 7px; border-radius: 10px; font-size: 11px; color: white; font-weight: normal; display: inline-block; }
-        .badge-high { background-color: var(--high-color); }
-        .badge-mid { background-color: var(--mid-color); }
-        .badge-low { background-color: var(--low-color); }
         
         /* 대진표 전용 스타일 */
         .match-card { background: var(--match-bg); border-radius: 10px; padding: 12px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border: 1px solid #e9ecef; }
@@ -147,41 +139,35 @@
 
             // 규칙 1: 고급 + 초급 최우선 매칭
             while (highs.length > 0 && lows.length > 0) {
-                teams.push({ p1: highs.pop(), t1: 'high', p2: lows.pop(), t2: 'low', type: '고급 + 초급' });
+                teams.push({ p1: highs.pop(), p2: lows.pop() });
             }
             // 규칙 2: 남은 고급 + 중급 매칭
             while (highs.length > 0 && mids.length > 0) {
-                teams.push({ p1: highs.pop(), t1: 'high', p2: mids.pop(), t2: 'mid', type: '고급 + 중급' });
+                teams.push({ p1: highs.pop(), p2: mids.pop() });
             }
             // 규칙 3: 남은 초급 + 중급 매칭
             while (lows.length > 0 && mids.length > 0) {
-                teams.push({ p1: mids.pop(), t1: 'mid', p2: lows.pop(), t2: 'low', type: '중급 + 초급' });
+                teams.push({ p1: mids.pop(), p2: lows.pop() });
             }
             // 규칙 4: 남은 중급끼리 매칭
             while (mids.length >= 2) {
-                teams.push({ p1: mids.pop(), t1: 'mid', p2: mids.pop(), t2: 'mid', type: '중급 + 중급' });
+                teams.push({ p1: mids.pop(), p2: mids.pop() });
             }
 
             // 남은 인원 처리
             var remaining = [];
-            while(highs.length > 0) remaining.push({p: highs.pop(), t: 'high'});
-            while(mids.length > 0) remaining.push({p: mids.pop(), t: 'mid'});
-            while(lows.length > 0) remaining.push({p: lows.pop(), t: 'low'});
+            while(highs.length > 0) remaining.push(highs.pop());
+            while(mids.length > 0) remaining.push(mids.pop());
+            while(lows.length > 0) remaining.push(lows.pop());
 
             while (remaining.length >= 2) {
                 var p1 = remaining.pop();
                 var p2 = remaining.pop();
-                teams.push({ p1: p1.p, t1: p1.t, p2: p2.p, t2: p2.t, type: '보완조' });
+                teams.push({ p1: p1, p2: p2 });
             }
 
-            // 🔥 [수정 핵심] 구성된 팀들의 순서를 한 번 더 무작위로 섞어서 1팀, 2팀... 번호를 새로 부여합니다.
+            // 구성된 팀들의 순서를 무작위로 섞습니다.
             teams = shuffle(teams);
-
-            var badgeMap = {
-                high: '<span class="badge badge-high">고급</span>',
-                mid: '<span class="badge badge-mid">중급</span>',
-                low: '<span class="badge badge-low">초급</span>'
-            };
 
             var html = '<div class="section-title">📋 복식 팀 구성 (' + teams.length + '개 팀)</div>';
 
@@ -190,20 +176,17 @@
                 html += '<div class="team-card">' +
                             '<div class="team-header">' +
                                 '<span>' + (k + 1) + '팀</span>' +
-                                '<small style="color:#6c757d; font-weight:normal;">[' + t.type + ']</small>' +
                             '</div>' +
                             '<div class="team-members">' +
-                                '👤 ' + t.p1 + ' ' + badgeMap[t.t1] + ' &nbsp;+&nbsp; 👤 ' + t.p2 + ' ' + badgeMap[t.t2] +
+                                '👤 ' + t.p1 + ' &nbsp;+&nbsp; 👤 ' + t.p2 +
                             '</div>' +
                         '</div>';
             }
 
             if (remaining.length > 0) {
-                var restNames = [];
-                for(var r=0; r<remaining.length; r++) restNames.push(remaining[r].p);
                 html += '<div class="rest-card">' +
                             '<strong>⚠️ 대기/휴식 인원 (' + remaining.length + '명):</strong><br>' +
-                            restNames.join(', ') +
+                            remaining.join(', ') +
                         '</div>';
             }
 
@@ -217,11 +200,11 @@
                         html += '<div class="match-card">' +
                                     '<div class="match-title">GAME ' + matchCount + '</div>' +
                                     '<div class="match-body">' +
-                                        '<div class="match-team">' + (i + 1) + '팀<br><small style="font-weight:normal; font-size:12px; color:#666;">(' + teams[i].p1 + ',' + teams[i].p2 + ')</small></div>' +
+                                        '<div class="match-team">' + (i + 1) + '팀<br><small style="font-weight:normal; font-size:12px; color:#666;">(' + teams[i].p1 + ', ' + teams[i].p2 + ')</small></div>' +
                                         '<div><input type="number" class="score-input" min="0"></div>' +
                                         '<div class="match-vs">VS</div>' +
                                         '<div><input type="number" class="score-input" min="0"></div>' +
-                                        '<div class="match-team">' + (j + 1) + '팀<br><small style="font-weight:normal; font-size:12px; color:#666;">(' + teams[j].p1 + ',' + teams[j].p2 + ')</small></div>' +
+                                        '<div class="match-team">' + (j + 1) + '팀<br><small style="font-weight:normal; font-size:12px; color:#666;">(' + teams[j].p1 + ', ' + teams[j].p2 + ')</small></div>' +
                                     '</div>' +
                                 '</div>';
                         matchCount++;
