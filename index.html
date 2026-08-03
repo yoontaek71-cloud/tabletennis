@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>탁구 복식 리그전 팀 편성기</title>
+    <style>
+        :root {
+            --primary: #007bff;
+            --bg: #f8f9fa;
+            --high-color: #d9534f;
+            --mid-color: #f0ad4e;
+            --low-color: #5cb85c;
+            --match-bg: #ffffff;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto, sans-serif; padding: 15px; max-width: 600px; margin: auto; background-color: var(--bg); color: #333; line-height: 1.5; }
+        h2 { text-align: center; margin-top: 10px; margin-bottom: 20px; font-size: 1.4rem; }
+        .card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 15px; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 0.95rem; }
+        .input-group input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; -webkit-appearance: none; }
+        .input-group .help { font-size: 11px; color: #6c757d; margin-top: 2px; }
+        .num-inputs { display: flex; justify-content: space-between; gap: 8px; }
+        .num-inputs div { flex: 1; text-align: center; }
+        .num-inputs label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 4px; }
+        .num-inputs input { width: 100%; padding: 8px; font-size: 16px; text-align: center; border: 1px solid #ccc; border-radius: 8px; -webkit-appearance: none; }
+        button { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        button:active { opacity: 0.8; }
+        
+        .team-card { background: white; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); border-left: 5px solid var(--primary); }
+        .team-header { font-weight: bold; font-size: 0.95em; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .team-members { font-size: 1em; word-break: break-all; }
+        
+        .badge { padding: 2px 7px; border-radius: 10px; font-size: 11px; color: white; font-weight: normal; display: inline-block; }
+        .badge-high { background-color: var(--high-color); }
+        .badge-mid { background-color: var(--mid-color); }
+        .badge-low { background-color: var(--low-color); }
+        
+        /* 대진표 전용 스타일 */
+        .match-card { background: var(--match-bg); border-radius: 10px; padding: 12px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border: 1px solid #e9ecef; }
+        .match-title { font-size: 0.85rem; font-weight: bold; color: #6c757d; margin-bottom: 6px; }
+        .match-body { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
+        .match-team { flex: 1; text-align: center; font-weight: bold; }
+        .match-vs { width: 40px; text-align: center; color: #d9534f; font-weight: bold; font-size: 0.85rem; }
+        .score-input { width: 42px; padding: 5px; text-align: center; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; }
+
+        .rest-card { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 10px; margin-top: 15px; font-size: 0.95rem; }
+        .warn { color: #dc3545; text-align: center; font-weight: bold; padding: 10px; }
+        .section-title { font-size: 1.15rem; margin: 20px 0 10px 0; border-bottom: 2px solid #007bff; padding-bottom: 5px; color: #007bff; }
+    </style>
+</head>
+<body>
+
+    <h2>🏓 탁구 복식 자동 팀 편성기</h2>
+
+    <div class="card">
+        <div class="input-group">
+            <label>1급. 고급 명단 (쉼표 구분)</label>
+            <input type="text" id="highNames" placeholder="예: 김고급, 이고급">
+            <div class="help">비워두면 아래 숫자 인원수로 생성됩니다.</div>
+        </div>
+        <div class="input-group">
+            <label>2급. 중급 명단 (쉼표 구분)</label>
+            <input type="text" id="midNames" placeholder="예: 박중급, 최중급">
+        </div>
+        <div class="input-group">
+            <label>3급. 초급 명단 (쉼표 구분)</label>
+            <input type="text" id="lowNames" placeholder="예: 정초급, 강초급">
+        </div>
+
+        <hr style="border:0; border-top:1px solid #eee; margin:12px 0;">
+
+        <div class="num-inputs">
+            <div>
+                <label>고급(명)</label>
+                <input type="number" id="highCount" value="4" min="0">
+            </div>
+            <div>
+                <label>중급(명)</label>
+                <input type="number" id="midCount" value="4" min="0">
+            </div>
+            <div>
+                <label>초급(명)</label>
+                <input type="number" id="lowCount" value="4" min="0">
+            </div>
+        </div>
+
+        <br>
+        <button type="button" id="btnGenerate">팀 & 리그 대진표 만들기 🚀</button>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("btnGenerate").addEventListener("click", generateTeams);
+        });
+
+        function parseInput(inputId, countId, prefix) {
+            var text = document.getElementById(inputId).value.trim();
+            if (text.length > 0) {
+                var arr = text.split(',');
+                var res = [];
+                for (var i = 0; i < arr.length; i++) {
+                    var name = arr[i].trim();
+                    if (name.length > 0) res.push(name);
+                }
+                return res;
+            } else {
+                var count = parseInt(document.getElementById(countId).value) || 0;
+                var list = [];
+                for (var j = 1; j <= count; j++) {
+                    list.push(prefix + j);
+                }
+                return list;
+            }
+        }
+
+        function shuffle(array) {
+            var currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                var temp = array[currentIndex];
+                array[currentIndex] = array[randomIndex];
+                array[randomIndex] = temp;
+            }
+            return array;
+        }
+
+        function generateTeams() {
+            var highs = shuffle(parseInput('highNames', 'highCount', '고급'));
+            var mids = shuffle(parseInput('midNames', 'midCount', '중급'));
+            var lows = shuffle(parseInput('lowNames', 'lowCount', '초급'));
+
+            var total = highs.length + mids.length + lows.length;
+            var resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = "";
+
+            if (total < 4) {
+                resultDiv.innerHTML = "<div class='card warn'>⚠️ 최소 4명 이상이어야 복식 팀 편성이 가능합니다.</div>";
+                return;
+            }
+
+            var teams = [];
+
+            // 규칙 1: 고급 + 초급 최우선 매칭
+            while (highs.length > 0 && lows.length > 0) {
+                teams.push({ p1: highs.pop(), t1: 'high', p2: lows.pop(), t2: 'low', type: '고급 + 초급' });
+            }
+            // 규칙 2: 남은 고급 + 중급 매칭
+            while (highs.length > 0 && mids.length > 0) {
+                teams.push({ p1: highs.pop(), t1: 'high', p2: mids.pop(), t2: 'mid', type: '고급 + 중급' });
+            }
+            // 규칙 3: 남은 초급 + 중급 매칭
+            while (lows.length > 0 && mids.length > 0) {
+                teams.push({ p1: mids.pop(), t1: 'mid', p2: lows.pop(), t2: 'low', type: '중급 + 초급' });
+            }
+            // 규칙 4: 남은 중급끼리 매칭
+            while (mids.length >= 2) {
+                teams.push({ p1: mids.pop(), t1: 'mid', p2: mids.pop(), t2: 'mid', type: '중급 + 중급' });
+            }
+
+            // 남은 인원 처리
+            var remaining = [];
+            while(highs.length > 0) remaining.push({p: highs.pop(), t: 'high'});
+            while(mids.length > 0) remaining.push({p: mids.pop(), t: 'mid'});
+            while(lows.length > 0) remaining.push({p: lows.pop(), t: 'low'});
+
+            while (remaining.length >= 2) {
+                var p1 = remaining.pop();
+                var p2 = remaining.pop();
+                teams.push({ p1: p1.p, t1: p1.t, p2: p2.p, t2: p2.t, type: '보완조' });
+            }
+
+            // 🔥 [수정 핵심] 구성된 팀들의 순서를 한 번 더 무작위로 섞어서 1팀, 2팀... 번호를 새로 부여합니다.
+            teams = shuffle(teams);
+
+            var badgeMap = {
+                high: '<span class="badge badge-high">고급</span>',
+                mid: '<span class="badge badge-mid">중급</span>',
+                low: '<span class="badge badge-low">초급</span>'
+            };
+
+            var html = '<div class="section-title">📋 복식 팀 구성 (' + teams.length + '개 팀)</div>';
+
+            for (var k = 0; k < teams.length; k++) {
+                var t = teams[k];
+                html += '<div class="team-card">' +
+                            '<div class="team-header">' +
+                                '<span>' + (k + 1) + '팀</span>' +
+                                '<small style="color:#6c757d; font-weight:normal;">[' + t.type + ']</small>' +
+                            '</div>' +
+                            '<div class="team-members">' +
+                                '👤 ' + t.p1 + ' ' + badgeMap[t.t1] + ' &nbsp;+&nbsp; 👤 ' + t.p2 + ' ' + badgeMap[t.t2] +
+                            '</div>' +
+                        '</div>';
+            }
+
+            if (remaining.length > 0) {
+                var restNames = [];
+                for(var r=0; r<remaining.length; r++) restNames.push(remaining[r].p);
+                html += '<div class="rest-card">' +
+                            '<strong>⚠️ 대기/휴식 인원 (' + remaining.length + '명):</strong><br>' +
+                            restNames.join(', ') +
+                        '</div>';
+            }
+
+            // 풀리그 대진표 자동 생성 (Round Robin)
+            if (teams.length >= 2) {
+                html += '<div class="section-title">⚔️ 풀리그 대진표 (' + (teams.length * (teams.length - 1) / 2) + '경기)</div>';
+                
+                var matchCount = 1;
+                for (var i = 0; i < teams.length; i++) {
+                    for (var j = i + 1; j < teams.length; j++) {
+                        html += '<div class="match-card">' +
+                                    '<div class="match-title">GAME ' + matchCount + '</div>' +
+                                    '<div class="match-body">' +
+                                        '<div class="match-team">' + (i + 1) + '팀<br><small style="font-weight:normal; font-size:12px; color:#666;">(' + teams[i].p1 + ',' + teams[i].p2 + ')</small></div>' +
+                                        '<div><input type="number" class="score-input" min="0"></div>' +
+                                        '<div class="match-vs">VS</div>' +
+                                        '<div><input type="number" class="score-input" min="0"></div>' +
+                                        '<div class="match-team">' + (j + 1) + '팀<br><small style="font-weight:normal; font-size:12px; color:#666;">(' + teams[j].p1 + ',' + teams[j].p2 + ')</small></div>' +
+                                    '</div>' +
+                                '</div>';
+                        matchCount++;
+                    }
+                }
+            }
+
+            resultDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
