@@ -48,32 +48,32 @@
 
     <div class="card">
         <div class="input-group">
-            <label>1급. 고급 명단 (쉼표 구분)</label>
-            <input type="text" id="highNames" placeholder="예: 김고급, 이고급">
+            <label>1그룹. A1 명단 (쉼표 구분)</label>
+            <input type="text" id="highNames" placeholder="예: 김탁구, 이탁구">
             <div class="help">비워두면 아래 숫자 인원수로 생성됩니다.</div>
         </div>
         <div class="input-group">
-            <label>2급. 중급 명단 (쉼표 구분)</label>
-            <input type="text" id="midNames" placeholder="예: 박중급, 최중급">
+            <label>2그룹. A2 명단 (쉼표 구분)</label>
+            <input type="text" id="midNames" placeholder="예: 박탁구, 최탁구">
         </div>
         <div class="input-group">
-            <label>3급. 초급 명단 (쉼표 구분)</label>
-            <input type="text" id="lowNames" placeholder="예: 정초급, 강초급">
+            <label>3그룹. A3 명단 (쉼표 구분)</label>
+            <input type="text" id="lowNames" placeholder="예: 정탁구, 강탁구">
         </div>
 
         <hr style="border:0; border-top:1px solid #eee; margin:12px 0;">
 
         <div class="num-inputs">
             <div>
-                <label>고급(명)</label>
+                <label>A1 (명)</label>
                 <input type="number" id="highCount" value="4" min="0">
             </div>
             <div>
-                <label>중급(명)</label>
+                <label>A2 (명)</label>
                 <input type="number" id="midCount" value="4" min="0">
             </div>
             <div>
-                <label>초급(명)</label>
+                <label>A3 (명)</label>
                 <input type="number" id="lowCount" value="4" min="0">
             </div>
         </div>
@@ -103,7 +103,7 @@
                 var count = parseInt(document.getElementById(countId).value) || 0;
                 var list = [];
                 for (var j = 1; j <= count; j++) {
-                    list.push(prefix + j);
+                    list.push(prefix + '-' + j);
                 }
                 return list;
             }
@@ -122,9 +122,9 @@
         }
 
         function generateTeams() {
-            var highs = shuffle(parseInput('highNames', 'highCount', '고급'));
-            var mids = shuffle(parseInput('midNames', 'midCount', '중급'));
-            var lows = shuffle(parseInput('lowNames', 'lowCount', '초급'));
+            var highs = shuffle(parseInput('highNames', 'highCount', 'A1'));
+            var mids = shuffle(parseInput('midNames', 'midCount', 'A2'));
+            var lows = shuffle(parseInput('lowNames', 'lowCount', 'A3'));
 
             var total = highs.length + mids.length + lows.length;
             var resultDiv = document.getElementById('result');
@@ -137,19 +137,19 @@
 
             var teams = [];
 
-            // 규칙 1: 고급 + 초급 최우선 매칭
+            // 규칙 1: A1 + A3 최우선 매칭
             while (highs.length > 0 && lows.length > 0) {
                 teams.push({ p1: highs.pop(), p2: lows.pop() });
             }
-            // 규칙 2: 남은 고급 + 중급 매칭
+            // 규칙 2: 남은 A1 + A2 매칭
             while (highs.length > 0 && mids.length > 0) {
                 teams.push({ p1: highs.pop(), p2: mids.pop() });
             }
-            // 규칙 3: 남은 초급 + 중급 매칭
+            // 규칙 3: 남은 A3 + A2 매칭
             while (lows.length > 0 && mids.length > 0) {
                 teams.push({ p1: mids.pop(), p2: lows.pop() });
             }
-            // 규칙 4: 남은 중급끼리 매칭
+            // 규칙 4: 남은 A2끼리 매칭
             while (mids.length >= 2) {
                 teams.push({ p1: mids.pop(), p2: mids.pop() });
             }
