@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>탁구 복식 리그전 팀 편성기</title>
+    <title>써밋리그 복식 팀편성</title>
     <style>
         :root {
             --primary: #007bff;
@@ -37,6 +37,12 @@
         .match-vs { width: 40px; text-align: center; color: #d9534f; font-weight: bold; font-size: 0.85rem; }
         .score-input { width: 42px; padding: 5px; text-align: center; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; }
 
+        /* 순위표 전용 스타일 */
+        .rank-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-top: 10px; }
+        .rank-table th, .rank-table td { padding: 10px 6px; text-align: center; font-size: 0.88rem; border-bottom: 1px solid #eee; }
+        .rank-table th { background-color: #f1f3f5; font-weight: bold; color: #495057; }
+        .rank-table tr:first-child td { font-weight: bold; color: #007bff; background-color: #f0f7ff; }
+
         .rest-card { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 10px; margin-top: 15px; font-size: 0.95rem; }
         .warn { color: #dc3545; text-align: center; font-weight: bold; padding: 10px; }
         .section-title { font-size: 1.15rem; margin: 20px 0 10px 0; border-bottom: 2px solid #007bff; padding-bottom: 5px; color: #007bff; }
@@ -44,7 +50,7 @@
 </head>
 <body>
 
-    <h2>🏓 탁구 복식 자동 팀 편성기</h2>
+    <h2>🏓 써밋리그 복식 팀편성</h2>
 
     <div class="card">
         <div class="input-group">
@@ -85,6 +91,8 @@
     <div id="result"></div>
 
     <script>
+        var currentTeams = []; // 전역 팀 데이터 배열 저장
+
         document.addEventListener("DOMContentLoaded", function() {
             document.getElementById("btnGenerate").addEventListener("click", generateTeams);
         });
@@ -137,21 +145,21 @@
 
             var teams = [];
 
-            // 규칙 1: A1 + A3 최우선 매칭
+            // [우선순위 1] A1 + A3 매칭
             while (highs.length > 0 && lows.length > 0) {
                 teams.push({ p1: highs.pop(), p2: lows.pop() });
             }
-            // 규칙 2: 남은 A1 + A2 매칭
+            // [우선순위 2] A2 + A2 매칭
+            while (mids.length >= 2) {
+                teams.push({ p1: mids.pop(), p2: mids.pop() });
+            }
+            // [우선순위 3] 남은 A1 + A2 매칭
             while (highs.length > 0 && mids.length > 0) {
                 teams.push({ p1: highs.pop(), p2: mids.pop() });
             }
-            // 규칙 3: 남은 A3 + A2 매칭
-            while (lows.length > 0 && mids.length > 0) {
+            // [우선순위 4] 남은 A2 + A3 매칭
+            while (mids.length > 0 && lows.length > 0) {
                 teams.push({ p1: mids.pop(), p2: lows.pop() });
-            }
-            // 규칙 4: 남은 A2끼리 매칭
-            while (mids.length >= 2) {
-                teams.push({ p1: mids.pop(), p2: mids.pop() });
             }
 
             // 남은 인원 처리
@@ -166,8 +174,9 @@
                 teams.push({ p1: p1, p2: p2 });
             }
 
-            // 구성된 팀들의 순서를 무작위로 섞습니다.
+            // 구성된 팀 무작위 셔플
             teams = shuffle(teams);
+            currentTeams = teams; // 저장
 
             var html = '<div class="section-title">📋 복식 팀 구성 (' + teams.length + '개 팀)</div>';
 
@@ -190,8 +199,11 @@
                         '</div>';
             }
 
-            // 풀리그 대진표 자동 생성 (Round Robin)
+            // 대진표 및 순위표 영역 생성
             if (teams.length >= 2) {
+                html += '<div class="section-title">🏆 실시간 순위표</div>' +
+                        '<div id="rankContainer"></div>';
+
                 html += '<div class="section-title">⚔️ 풀리그 대진표 (' + (teams.length * (teams.length - 1) / 2) + '경기)</div>';
                 
                 var matchCount = 1;
@@ -201,9 +213,9 @@
                                     '<div class="match-title">GAME ' + matchCount + '</div>' +
                                     '<div class="match-body">' +
                                         '<div class="match-team">' + (i + 1) + '팀<br><small style="font-weight:normal; font-size:12px; color:#666;">(' + teams[i].p1 + ', ' + teams[i].p2 + ')</small></div>' +
-                                        '<div><input type="number" class="score-input" min="0"></div>' +
+                                        '<div><input type="number" class="score-input" data-t1="' + i + '" data-t2="' + j + '" data-side="1" min="0" oninput="updateRankings()"></div>' +
                                         '<div class="match-vs">VS</div>' +
-                                        '<div><input type="number" class="score-input" min="0"></div>' +
+                                        '<div><input type="number" class="score-input" data-t1="' + i + '" data-t2="' + j + '" data-side="2" min="0" oninput="updateRankings()"></div>' +
                                         '<div class="match-team">' + (j + 1) + '팀<br><small style="font-weight:normal; font-size:12px; color:#666;">(' + teams[j].p1 + ', ' + teams[j].p2 + ')</small></div>' +
                                     '</div>' +
                                 '</div>';
@@ -213,6 +225,103 @@
             }
 
             resultDiv.innerHTML = html;
+            updateRankings(); // 초기 순위표 표시
+        }
+
+        // 실시간 순위 산출 함수
+        function updateRankings() {
+            var n = currentTeams.length;
+            if (n < 2) return;
+
+            // 각 팀별 전적 데이터 구조 초기화
+            var stats = [];
+            for (var i = 0; i < n; i++) {
+                stats.push({
+                    teamIdx: i + 1,
+                    players: currentTeams[i].p1 + ', ' + currentTeams[i].p2,
+                    win: 0,
+                    loss: 0,
+                    draw: 0,
+                    scoreFor: 0,
+                    scoreAgainst: 0,
+                    diff: 0
+                });
+            }
+
+            // 대진표 스코어 입력값 전부 가져와 계산
+            var inputs = document.querySelectorAll('.score-input');
+            for (var k = 0; k < inputs.length; k += 2) {
+                var inp1 = inputs[k];
+                var inp2 = inputs[k + 1];
+
+                if (inp1 && inp2 && inp1.value !== "" && inp2.value !== "") {
+                    var s1 = parseInt(inp1.value) || 0;
+                    var s2 = parseInt(inp2.value) || 0;
+
+                    var t1 = parseInt(inp1.getAttribute('data-t1'));
+                    var t2 = parseInt(inp1.getAttribute('data-t2'));
+
+                    stats[t1].scoreFor += s1;
+                    stats[t1].scoreAgainst += s2;
+                    stats[t2].scoreFor += s2;
+                    stats[t2].scoreAgainst += s1;
+
+                    if (s1 > s2) {
+                        stats[t1].win += 1;
+                        stats[t2].loss += 1;
+                    } else if (s2 > s1) {
+                        stats[t2].win += 1;
+                        stats[t1].loss += 1;
+                    } else {
+                        stats[t1].draw += 1;
+                        stats[t2].draw += 1;
+                    }
+                }
+            }
+
+            // 득실차 계산
+            for (var m = 0; m < n; m++) {
+                stats[m].diff = stats[m].scoreFor - stats[m].scoreAgainst;
+            }
+
+            // 정렬: 1순위 승수(승점), 2순위 득실차, 3순위 총 득점
+            stats.sort(function(a, b) {
+                if (b.win !== a.win) return b.win - a.win;
+                if (b.diff !== a.diff) return b.diff - a.diff;
+                return b.scoreFor - a.scoreFor;
+            });
+
+            // 순위표 HTML 생성
+            var html = '<table class="rank-table">' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<th>순위</th>' +
+                                '<th>팀</th>' +
+                                '<th>선수 명단</th>' +
+                                '<th>승</th>' +
+                                '<th>패</th>' +
+                                '<th>득실차</th>' +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody>';
+
+            for (var r = 0; r < stats.length; r++) {
+                var st = stats[r];
+                var diffStr = (st.diff > 0 ? '+' : '') + st.diff;
+                html += '<tr>' +
+                            '<td>' + (r + 1) + '위</td>' +
+                            '<td>' + st.teamIdx + '팀</td>' +
+                            '<td>' + st.players + '</td>' +
+                            '<td>' + st.win + '</td>' +
+                            '<td>' + st.loss + '</td>' +
+                            '<td>' + diffStr + '</td>' +
+                        '</tr>';
+            }
+
+            html += '</tbody></table>';
+
+            var container = document.getElementById('rankContainer');
+            if (container) container.innerHTML = html;
         }
     </script>
 </body>
